@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RPS Crazy</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+:root {
+  --bg1: #0400ff;
+  --bg2: #000000;
+  --neon1: #01ffff;
+  --neon2: #0008ff;
+  --accent: #2600fc;
+  --win-glow: #aa00ff;
+  --lose-glow: #ff4ca0;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  font-family:'Press Start 2P', monospace;
+  background: radial-gradient(1200px 600px at 15% 15%, rgba(0,0,0,0.3), transparent),
+              linear-gradient(135deg, var(--bg1), var(--bg2));
+  color:#f90101;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+}
+.container {
+  width:100%;
+  max-width:1200px;
+  padding:30px;
+  display:grid;
+  grid-template-columns:1fr 420px;
+  gap:20px;
+  align-items:start;
+}
+.panel {
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:16px;
+  padding:20px;
+  border:1px solid rgba(255,255,255,0.04);
+  box-shadow:0 10px 40px rgba(0,0,0,0.7);
+  position:relative;
+}
+header h1 {
+  font-size:22px;
+  color:var(--neon1);
+  text-shadow:0 0 12px var(--neon1), 0 0 24px rgba(0,255,240,0.06);
+  margin-bottom:8px;
+}
+header p {
+  font-size:10px;
+  color:rgba(255,255,255,0.75);
+  margin-bottom:14px;
+}
+.menu {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:14px;
+}
+.btn {
+  background:transparent;
+  color:var(--neon1);
+  border:2px solid rgba(0,255,240,0.12);
+  padding:8px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:12px;
+  transition:transform .12s, box-shadow .12s;
+}
+.btn:hover {
+  transform:translateY(-3px);
+  box-shadow:0 8px 30px rgba(0,240,230,0.12);
+}
+.start-screen {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  height:420px;
+}
+.big-start {
+  background:linear-gradient(90deg, var(--neon1), var(--neon2));
+  color:#050405;
+  border:none;
+  padding:20px 36px;
+  border-radius:14px;
+  font-size:16px;
+  cursor:pointer;
+  box-shadow:0 10px 50px rgba(0,240,230,0.2);
+}
+.controls {
+  display:flex;
+  gap:20px;
+  align-items:center;
+  margin-top:12px;
+}
+.choices {
+  display:flex;
+  gap:20px;
+}
+.choice {
+  width:140px;
+  height:140px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:52px;
+  cursor:pointer;
+  border:3px solid rgba(255,255,255,0.06);
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.14));
+  transition:transform .15s, box-shadow .15s, text-shadow .15s;
+  position:relative;
+}
+.choice:hover {
+  transform:scale(1.15) rotate(-4deg);
+  box-shadow:0 14px 40px rgba(0,0,0,0.6), 0 0 22px var(--neon1);
+  text-shadow:0 0 18px var(--neon1);
+}
+.result {
+  margin-top:20px;
+  padding:14px;
+  border-radius:12px;
+  min-height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  letter-spacing:.8px;
+  background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.03);
+  transition:all .3s;
+  text-align:center;
+}
+.result.win { animation:flashWin .6s; }
+.result.lose { animation:flashLose .6s; }
+@keyframes flashWin {
+  0% { transform:scale(1); color:#fff; }
+  50% { transform:scale(1.2); color:var(--win-glow); text-shadow:0 0 20px var(--win-glow); }
+  100% { transform:scale(1); color:#fff; }
+}
+@keyframes flashLose {
+  0% { transform:scale(1); color:#fff; }
+  50% { transform:scale(1.2); color:var(--lose-glow); text-shadow:0 0 20px var(--lose-glow); }
+  100% { transform:scale(1); color:#fff; }
+}
+.hud {
+  display:flex;
+  gap:14px;
+  margin-top:20px;
+  flex-wrap:wrap;
+}
+.stat {
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:12px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.03);
+  min-width:120px;
+  text-align:center;
+}
+.stat strong {
+  display:block;
+  font-size:22px;
+  color:var(--accent);
+  margin-bottom:4px;
+}
+.side {
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.shop {
+  padding:14px;
+  border-radius:12px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+  border:1px solid rgba(255,255,255,0.02);
+}
+.shop h3 {
+  margin:0 0 10px 0;
+  color:var(--neon2);
+  font-size:14px;
+}
+.shop-list {
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-height:500px;
+  overflow:auto;
+  padding-right:6px;
+}
+.shop-item {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.03);
+  cursor:pointer;
+  background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+  transition:transform .10s, box-shadow .10s, background .12s;
+}
+.shop-item:hover {
+  transform:translateY(-3px);
+  box-shadow:0 14px 40px rgba(0,0,0,0.45);
+  background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+}
+.shop-item .name {
+  font-size:12px;
+}
+.shop-item .cost {
+  font-size:12px;
+  color:var(--neon1);
+  font-weight:bold;
+}
+.purchased {
+  opacity:0.6;
+  filter:grayscale(0.3);
+}
+.hack-menu {
+  margin-top:12px;
+  padding:12px;
+  border-radius:12px;
+  border:1px dashed rgba(255,255,255,0.04);
+  background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.35));
+  display:none;
+}
+.small {
+  font-size:10px;
+  color:rgba(255,255,255,0.75);
+}
+.neon-skin {
+  border:2px solid rgba(0,255,240,0.18);
+  box-shadow:0 0 14px rgba(0,255,240,0.08) inset;
+}
+/* Boss overlay flash */
+#bossOverlay {
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  background:rgba(255,0,0,0.06);
+  opacity:0;
+  transition:opacity .15s;
+}
+#bossOverlay.active {
+  opacity:0.3;
+  animation:flashBoss .4s;
+}
+@keyframes flashBoss {
+  0%,100%{opacity:0.3;}
+  50%{opacity:0.7;}
+}
+/* Achievement pop-up */
+.achievement-popup {
+  position:absolute;
+  top:20px; left:50%;
+  transform:translateX(-50%) scale(0);
+  padding:12px 24px;
+  background:var(--neon1);
+  color:#050405;
+  border-radius:10px;
+  font-size:13px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,255,240,0.18);
+  z-index:10;
+  pointer-events:none;
+  transition:transform .3s ease-out, opacity .3s;
+  opacity:0;
+}
+.achievement-popup.show {
+  transform:translateX(-50%) scale(1);
+  opacity:1;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="panel">
+    <header>
+      <h1>⚔️ Gamer RPS – Ultra Boss Edition</h1>
+      <p>Brace yourself for the most intense Rock‑Paper‑Scissors boss battle ever. Unlock shop items, hacks, and domin­ate!</p>
+    </header>
+
+    <div class="menu">
+      <button class="btn" id="startBtn">START GAME</button>
+      <select id="difficulty" class="btn">
+        <option value="easy">Easy</option>
+        <option value="normal" selected>Normal</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+        <option value="challenging">Challenging</option>
+        <option value="extreme">Extreme</option>
+        <option value="impossible">Impossible</option>
+        <option value="final">FINAL BOSS</option>
+      </select>
+    </div>
+
+    <div id="startScreen" class="start-screen">
+      <h2>WELCOME, CHALLENGER!</h2>
+      <p class="small">Select difficulty and prove yourself. Earn points. Buy upgrades. Unlock hacks. Beat the final boss.</p>
+    </div>
+
+    <div id="gameUI" style="display:none; position:relative;">
+      <div id="bossOverlay"></div>
+      <div class="controls">
+        <div class="choices" id="choicesRow">
+          <div class="choice neon-skin" data-choice="rock" title="Rock">✊</div>
+          <div class="choice neon-skin" data-choice="paper" title="Paper">📄</div>
+          <div class="choice neon-skin" data-choice="scissors" title="✂️">✂️</div>
+        </div>
+      </div>
+
+      <div class="result" id="resultBox">Make your move — choose Rock, Paper or Scissors.</div>
+
+      <div class="hud">
+        <div class="stat">Player <strong id="playerScore">0</strong><span class="small">wins</span></div>
+        <div class="stat">Computer <strong id="computerScore">0</strong><span class="small">wins</span></div>
+        <div class="stat">Points <strong id="points">0</strong></div>
+        <div class="stat">XP <strong id="xp">0</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <div class="shop panel">
+      <h3>RPS SHOP</h3>
+      <div class="shop-list" id="shopList"></div>
+    </div>
+
+    <div class="panel hack-menu" id="hackPanel">
+      <h3 style="color:var(--neon1)">HACK MENU (UNLOCKED)</h3>
+      <label class="small"><input type="checkbox" id="cheatAutoWin"/> Force Auto‑Win</label><br/>
+      <label class="small"><input type="checkbox" id="cheatAutoTier"/> AI plays easier</label><br/>
+      <label class="small"><input type="checkbox" id="cheatFreeShop"/> Free shop purchases</label><br/>
+      <button class="btn" id="givePointsBtn">Grant +1,000,000 pts</button>
+      <button class="btn" id="resetHackBtn">Reset Hacks</button>
+    </div>
+  </aside>
+</div>
+
+<div class="achievement-popup" id="achPopup">Achievement Unlocked!</div>
+
+<audio id="sfx-win" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
+<audio id="sfx-lose" src="https://www.soundjay.com/button/sounds/button-10.mp3" preload="auto"></audio>
+<audio id="sfx-buy" src="https://www.soundjay.com/button/sounds/button-3.mp3" preload="auto"></audio>
+<audio id="sfx-unlock" src="https://www.soundjay.com/misc/sounds/magic-chime-01.mp3" preload="auto"></audio>
+<audio id="sfx-ach" src="https://www.soundjay.com/misc/sounds/magic-chime-04.mp3" preload="auto"></audio>
+
+<script>
+// Game state and logic
+const state = {
+  playerScore:0, computerScore:0, points:0, xp:0,
+  difficulty:'normal', autoWinActive:false,
+  hackUnlocked:false, doublePointsUntil:0, lives:1,
+  autoTokens:0, luckyCharm:0, shopDiscount:false,
+  freeShop:false, finalKey:false, autoPointsEnabled:false
+};
+
+const shopItemsData = [
+  { id:'extraLife', name:'Extra Life', cost:5, desc:'Gain +1 life permanently', apply(){ state.lives+=1; showAchievement('Extra Life Purchased'); renderState(); } },
+  { id:'bonus50', name:'Bonus +50 Points', cost:10, desc:'Instant +50 points', apply(){ state.points+=50; showAchievement('Bonus 50 Points'); renderState(); } },
+  { id:'doublePoints', name:'Double Points (60s)', cost:30, desc:'Double points earned for 60 seconds', apply(){ state.doublePointsUntil = Date.now()+60000; showAchievement('Double Points Enabled'); } },
+  { id:'autoToken', name:'Auto-Win Token', cost:80, desc:'One instant auto-win token', apply(){ state.autoTokens+=1; showAchievement('Auto-Win Token Acquired'); renderState(); } },
+  { id:'luckyCharm', name:'Lucky Charm', cost:150, desc:'Small boost to win chance', apply(){ state.luckyCharm +=1; showAchievement('Lucky Charm Equipped'); } },
+  { id:'neonSkin', name:'Neon UI Skin Toggle', cost:250, desc:'Toggle glowing UI style', apply(){ state.neonSkin = !state.neonSkin; updateSkin(); showAchievement('Neon UI Skin Toggled'); } },
+  { id:'shopDiscount', name:'Shop Discount 10%', cost:1000, desc:'10% off all future items', apply(){ state.shopDiscount = true; showAchievement('Shop Discount Unlocked'); } },
+  { id:'finalKey', name:'Final Boss Key', cost:10000, desc:'Unlock special final boss challenge', apply(){ state.finalKey = true; showAchievement('Final Boss Key Obtained'); } },
+  { id:'autoPointsGen', name:'Auto+Points Generator', cost:500000, desc:'Gain +1000 points each click', apply(){ state.autoPointsEnabled = true; showAchievement('Auto+Points Generator Active'); } },
+  { id:'hackMenuUnlock', name:'HACK MENU (UNLOCK)', cost:10000000, desc:'Unlocks hidden hack menu features', apply(){ state.hackUnlocked = true; unlockHackMenu(); showAchievement('Hack Menu Unlocked'); } }
+];
+
+function getItemCost(item){
+  let c = item.cost;
+  if(state.shopDiscount) c = Math.floor(c * 0.9);
+  return c;
+}
+
+// DOM refs
+const startBtn = document.getElementById('startBtn');
+const startScreen = document.getElementById('startScreen');
+const gameUI = document.getElementById('gameUI');
+const choicesEls = document.querySelectorAll('.choice');
+const resultBox = document.getElementById('resultBox');
+const playerScoreEl = document.getElementById('playerScore');
+const computerScoreEl = document.getElementById('computerScore');
+const pointsEl = document.getElementById('points');
+const xpEl = document.getElementById('xp');
+const difficultySel = document.getElementById('difficulty');
+const shopList = document.getElementById('shopList');
+const hackPanel = document.getElementById('hackPanel');
+const cheatAutoWin = document.getElementById('cheatAutoWin');
+const cheatAutoTier = document.getElementById('cheatAutoTier');
+const cheatFreeShop = document.getElementById('cheatFreeShop');
+const givePointsBtn = document.getElementById('givePointsBtn');
+const resetHackBtn = document.getElementById('resetHackBtn');
+const sfxWin = document.getElementById('sfx-win');
+const sfxLose = document.getElementById('sfx-lose');
+const sfxBuy = document.getElementById('sfx-buy');
+const sfxUnlock = document.getElementById('sfx-unlock');
+const sfxAch = document.getElementById('sfx-ach');
+const bossOverlay = document.getElementById('bossOverlay');
+const achPopup = document.getElementById('achPopup');
+
+startBtn.addEventListener('click', ()=>{
+  startScreen.style.display='none';
+  gameUI.style.display='block';
+  state.difficulty = difficultySel.value;
+  renderState();
+});
+
+difficultySel.addEventListener('change', ()=>{ state.difficulty = difficultySel.value; });
+
+choicesEls.forEach(el=>{
+  el.addEventListener('click', ()=>{
+    if(gameUI.style.display === 'none') return;
+    const choice = el.dataset.choice;
+    playRound(choice);
+  });
+});
+
+function playRound(playerChoice){
+  if((state.hackUnlocked && cheatAutoWin.checked) || state.autoWinActive){
+    applyWin(playerChoice,'[AUTO‑WIN cheat]');
+    return;
+  }
+  if(state.autoTokens > 0){
+    state.autoTokens -= 1;
+    applyWin(playerChoice,'[Auto‑Token]');
+    return;
+  }
+  const aiChoice = getAIChoice(playerChoice);
+  if(playerChoice === aiChoice){
+    applyDraw(playerChoice, aiChoice);
+  } else {
+    const pWins = (playerChoice==='rock'&&aiChoice==='scissors') ||
+                  (playerChoice==='paper'&&aiChoice==='rock') ||
+                  (playerChoice==='scissors'&&aiChoice==='paper');
+    if(pWins) applyWin(playerChoice, aiChoice);
+    else applyLoss(playerChoice, aiChoice);
+  }
+}
+
+function getAIChoice(playerChoice){
+  let biasMap = { easy:0.15, normal:0.4, medium:0.55, hard:0.7, challenging:0.78, extreme:0.86, impossible:0.94, final:0.98 };
+  let bias = biasMap[state.difficulty] || 0.5;
+  if(cheatAutoTier.checked) bias = 0.15;
+  if(Math.random() < bias){
+    return counter(playerChoice);
+  }
+  const choices = ['rock','paper','scissors'];
+  return choices[Math.floor(Math.random()*3)];
+}
+
+function counter(ch){
+  if(ch === 'rock') return 'paper';
+  if(ch === 'paper') return 'scissors';
+  return 'rock';
+}
+
+function applyWin(playerChoice,note){
+  state.playerScore += 1;
+  let pts = 1;
+  if(Date.now() < state.doublePointsUntil) pts *= 2;
+  if(state.luckyCharm) pts += Math.floor(state.luckyCharm * 0.2);
+  if(state.autoPointsEnabled) pts += 1000;
+  state.points += pts;
+  state.xp += 10;
+  sfxWin.currentTime=0; sfxWin.play();
+  resultBox.className='result win';
+  resultBox.innerHTML = `YOU WIN ✦<br/><small>${playerChoice.toUpperCase()} beats AI. ${note||''}</small><br/><small>+${pts} pts</small>`;
+  flashBoss();
+  renderState();
+  if(state.playerScore % 10 === 0) showAchievement(`Victory Streak: ${state.playerScore} Wins!`);
+}
+
+function applyLoss(playerChoice, aiChoice){
+  state.computerScore += 1;
+  if(state.lives > 1) state.lives -= 1;
+  sfxLose.currentTime=0; sfxLose.play();
+  resultBox.className='result lose';
+  resultBox.innerHTML = `YOU LOSE ✖<br/><small>${playerChoice.toUpperCase()} loses to ${aiChoice.toUpperCase()}</small>`;
+  flashBoss();
+  renderState();
+}
+
+function applyDraw(playerChoice, aiChoice){
+  resultBox.className='result';
+  resultBox.innerHTML = `DRAW<br/><small>Both chose ${playerChoice.toUpperCase()}</small>`;
+  renderState();
+}
+
+function flashBoss(){
+  bossOverlay.classList.add('active');
+  setTimeout(()=> bossOverlay.classList.remove('active'), 400);
+}
+
+function renderState(){
+  playerScoreEl.textContent = state.playerScore;
+  computerScoreEl.textContent = state.computerScore;
+  pointsEl.textContent = state.points;
+  xpEl.textContent = state.xp;
+  document.querySelector('.stat strong:nth-child(1)').textContent = state.lives; // if lives displayed
+}
+
+// Shop rendering
+function renderShop(){
+  shopList.innerHTML = '';
+  shopItemsData.forEach(item=>{
+    const cost = getItemCost(item);
+    const itemEl = document.createElement('div');
+    itemEl.className = 'shop-item';
+    itemEl.id = 'shop-'+item.id;
+    const left = document.createElement('div');
+    left.style.display='flex';
+    left.style.flexDirection='column';
+    const nameEl = document.createElement('div'); nameEl.className='name'; nameEl.textContent = item.name;
+    const descEl = document.createElement('div'); descEl.className='small'; descEl.textContent = item.desc;
+    left.appendChild(nameEl); left.appendChild(descEl);
+    const right = document.createElement('div'); right.style.display='flex'; right.style.alignItems='center';
+    const costEl = document.createElement('div'); costEl.className='cost'; costEl.textContent = (state.hackUnlocked || state.freeShop) ? 'FREE' : (cost+' pts');
+    const buyBtn = document.createElement('button'); buyBtn.className='btn'; buyBtn.textContent = (state.hackUnlocked || state.freeShop) ? 'GET' : 'BUY';
+    buyBtn.style.padding='6px 8px'; buyBtn.style.fontSize='11px';
+    buyBtn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      attemptPurchase(item);
+    });
+    right.appendChild(costEl); right.appendChild(buyBtn);
+    itemEl.appendChild(left); itemEl.appendChild(right);
+    itemEl.addEventListener('click',()=>{
+      alert(item.name + "\n" + item.desc + "\nCost: " + (state.hackUnlocked||state.freeShop ? 'FREE' : cost+' pts'));
+    });
+    shopList.appendChild(itemEl);
+  });
+}
+
+function attemptPurchase(item){
+  const cost = getItemCost(item);
+  if(state.hackUnlocked || state.freeShop){
+    applyItem(item);
+    sfxBuy.play();
+    renderShop(); return;
+  }
+  if(state.points >= cost){
+    state.points -= cost;
+    applyItem(item);
+    sfxBuy.play();
+    renderState();
+    renderShop();
+  } else {
+    alert('Not enough points: need '+cost+' pts');
+  }
+}
+
+function applyItem(item){
+  try {
+    item.apply();
+    const el = document.getElementById('shop-'+item.id);
+    if(el) el.classList.add('purchased');
+  } catch(err){ console.error(err); }
+}
+
+// Hack menu
+function unlockHackMenu(){
+  hackPanel.style.display='block';
+  state.hackUnlocked = true;
+  sfxUnlock.currentTime=0; sfxUnlock.play();
+}
+givePointsBtn.addEventListener('click', ()=>{
+  if(!state.hackUnlocked) { alert('Unlock hack menu first!'); return;}
+  state.points += 1;
+  showAchievement('+1 pts Granted');
+  renderState();
+});
+resetHackBtn.addEventListener('click', ()=>{
+  cheatAutoWin.checked = false;
+  cheatAutoTier.checked = false;
+  cheatFreeShop.checked = false;
+  state.freeShop = false;
+  renderState();
+});
+
+// Achievement popup
+function showAchievement(text){
+  achPopup.textContent = text;
+  achPopup.classList.add('show');
+  sfxAch.currentTime=0; sfxAch.play();
+  setTimeout(()=> achPopup.classList.remove('show'), 2000);
+}
+
+// Neon skin toggle
+function updateSkin(){
+  if(state.neonSkin){
+    document.querySelectorAll('.choice').forEach(el=>el.classList.add('neon-skin'));
+  } else {
+    document.querySelectorAll('.choice').forEach(el=>el.classList.remove('neon-skin'));
+  }
+}
+
+// Reset game state
+function resetAll(){
+  if(confirm("Reset all scores, points & unlocks?")){
+    Object.assign(state,{
+      playerScore:0, computerScore:0, points:0, xp:0,
+      difficulty:'normal', autoWinActive:false, lives:1,
+      autoTokens:0, luckyCharm:0, shopDiscount:false,
+      freeShop:false, finalKey:false, autoPointsEnabled:false
+    });
+    hackPanel.style.display = 'none';
+    updateSkin();
+    renderState();
+    renderShop();
+    showAchievement('Game Reset');
+  }
+}
+document.getElementById('btnReset')?.addEventListener('click', resetAll);
+
+// Initialize
+renderShop();
+updateSkin();
+renderState();
+
+</script>
+
+</body>
+</html>
